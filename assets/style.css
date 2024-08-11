@@ -1,0 +1,22 @@
+/* assets/styles.css */
+.stApp {
+    background-color: rgb(8, 139, 247);
+    
+    color: rgb(0, 3, 4);
+}
+
+/* Sidebar background */
+section[data-testid="stSidebar"] > div:first-child {
+    background-color: #876262; /* Dark gray for sidebar background */
+    color: white;
+}
+
+/* Sidebar text color */
+section[data-testid="stSidebar"] .css-1d391kg {
+    color: white;
+}
+
+/* Sidebar title color */
+section[data-testid="stSidebar"] h1 {
+    color: white;
+}
