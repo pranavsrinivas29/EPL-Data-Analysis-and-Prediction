@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import random
 import pickle
 import numpy as np
+from transformers import pipeline
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 # Load custom CSS from the assets folder
 def load_css(file_name):
@@ -41,6 +44,9 @@ epl_teams.index = epl_teams.index.map(str)
 
 # Display the Premier League logo
 st.image('assets/logo.png', width=180)
+
+
+
 
 
 st.markdown(
@@ -153,10 +159,48 @@ total_seasons = len(epl_season_data)
 champion_prob = champion_counts / total_seasons
 runner_up_prob = runner_up_counts / total_seasons
 
+# Load the TF-IDF model, matrix, and combined data for chatbot
+# Load the TF-IDF model, matrix, and combined data for chatbot
+@st.cache_resource
+def load_chatbot_resources():
+    with open('tfidf_model.pkl', 'rb') as model_file:
+        tfidf_vectorizer = pickle.load(model_file)
+    with open('tfidf_matrix.pkl', 'rb') as matrix_file:
+        tfidf_matrix = pickle.load(matrix_file)
+    with open('combined_data.pkl', 'rb') as data_file:
+        combined_df = pickle.load(data_file)
+    return tfidf_vectorizer, tfidf_matrix, combined_df
+
+
+
+# Function to retrieve information using TF-IDF model
+@st.cache_resource
+def load_llm():
+    generator = pipeline('text2text-generation', model='google/flan-t5-base')
+    return generator
+
+# Function to retrieve information using TF-IDF model
+def retrieve_information(query, tfidf_vectorizer, tfidf_matrix, combined_df):
+    query_vector = tfidf_vectorizer.transform([query])
+    cosine_similarities = cosine_similarity(query_vector, tfidf_matrix).flatten()
+    best_match_index = cosine_similarities.argmax()
+    best_match_score = cosine_similarities[best_match_index]
+
+    if best_match_score > 0.1:
+        return combined_df.iloc[best_match_index]['Answer']
+    else:
+        return "Sorry, I couldn't find an answer to your question."
+
+# Generate a response using the flan-t5-base and retrieved context
+def generate_response(query, context, generator):
+    prompt = f"Based on the following information, answer the user's question.\n\nInformation: {context}\n\nUser's Question: {query}\n\nAnswer:"
+    generated_text = generator(prompt, max_length=150, num_return_sequences=1)
+    return generated_text[0]['generated_text'].replace(prompt, '').strip()
+
 
 # Create a sidebar for navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.selectbox("Choose a page", ["Forecasting", "Data Analysis"], index=0)  # Default to "Forecasting" (index=0)
+page = st.sidebar.selectbox("Choose a page", ["Forecasting", "Data Analysis", "Chatbot"], index=0)
 
 if page == "Forecasting":
     # Forecasting Page
@@ -269,7 +313,19 @@ elif page == "Data Analysis":
     #with col2:
     st.write('### Avg G/M')
     st.image(AvgG_per_M, width=800)
+    
+# In the chatbot section
+elif page == "Chatbot":
+    # Chatbot Page
+    st.title('Premier League Chatbot')
+    st.write("Ask a question about Premier League matches or seasons, and I'll provide the best possible answer.")
 
-    
-    
-    
+    tfidf_vectorizer, tfidf_matrix, combined_df = load_chatbot_resources()
+    generator = load_llm()
+
+    user_question = st.text_input("Your Question:")
+
+    if st.button("Get Answer"):
+        context = retrieve_information(user_question, tfidf_vectorizer, tfidf_matrix, combined_df)
+        generated_answer = generate_response(user_question, context, generator)
+        st.write(f"Answer: {generated_answer}")
