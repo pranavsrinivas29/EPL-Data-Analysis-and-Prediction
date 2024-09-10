@@ -38,7 +38,7 @@ epl_season_1993_2024.csv: Contains season-level information.
 premier-league-matches.csv: Contains match-level informatio
 
 2. Creating Embeddings and FAISS Index
-We use SentenceTransformer to create embeddings for each textual description. These embeddings are added to a FAISS index for efficient similarity search.
+I used SentenceTransformer to create embeddings for each textual description. These embeddings are added to a FAISS index for efficient similarity search.
 ```
 # Initialize the model for creating embeddings
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -68,7 +68,7 @@ with open('model pickel/embedding_model.pkl', 'wb') as f:
 ```
 
 4. Loading Pre-Trained GPT-2 Model
-We use GPT-2 as the language model to generate chatbot responses based on retrieved data.
+I used GPT-2 as the language model to generate chatbot responses based on retrieved data.
 ```
 # Load the pre-trained GPT-2 model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -81,7 +81,7 @@ model.save_pretrained('gpt2_model')
 ```
 
 5. Testing the Saved Components
-We load the saved FAISS index, combined data, embedding model, and GPT-2 to ensure everything is working correctly.
+I loaded the saved FAISS index, combined data, embedding model, and GPT-2 to ensure everything is working correctly.
 ```
 # Test loading the FAISS index
 loaded_index = faiss.read_index('faiss_index.idx')
